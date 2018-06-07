@@ -17,7 +17,7 @@
         <div class="upload_button_holder">
           <a href="#" class='upload_button'>Upload</a>
           
-          <%-cloudinary.uploader.unsigned_image_upload_tag('image_id', preset_name,{ callback: cloudinary_cors, width: 500, height: 500, crop: "limit", tags: "lior3"  })%>
+          <%-cloudinary.uploader.unsigned_image_upload_tag('image_id', preset_name,{ callback: cloudinary_cors, tags: "lior3"})%>
         </div>
         <span class="status"></span>
 
