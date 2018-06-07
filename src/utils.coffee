@@ -162,56 +162,79 @@ process_if = (ifValue)->
 ###
 process_layer = (layer)->
   if isPlainObject(layer)
-    public_id = layer["public_id"]
-    format = layer["format"]
-    resource_type = layer["resource_type"] || "image"
-    type = layer["type"] || "upload"
-    text = layer["text"]
-    style = null
-    components = []
-
-    unless isEmpty(public_id)
-      public_id = public_id.replace(new RegExp("/", 'g'), ":")
-      public_id = "#{public_id}.#{format}" if format?
-
-    if isEmpty(text) && resource_type != "text"
-      if isEmpty(public_id)
-        throw "Must supply public_id for resource_type layer_parameter"
-      if resource_type == "subtitles"
-        style = textStyle(layer)
-
+    if layer["resource_type"] == "fetch" || layer["url"]?
+      result = "fetch:#{base64EncodeURL(layer['url'])}"
     else
-      resource_type = "text"
-      type = null
-      # // type is ignored for text layers
-      style = textStyle(layer)
-      unless isEmpty(text)
-        unless isEmpty(public_id) ^ isEmpty(style)
-          throw "Must supply either style parameters or a public_id when providing text parameter in a text overlay/underlay"
-        re = /\$\([a-zA-Z]\w*\)/g
-        start = 0
-#        textSource = text.replace(new RegExp("[,/]", 'g'), (c)-> "%#{c.charCodeAt(0).toString(16).toUpperCase()}")
-        textSource = smart_escape(decodeURIComponent(text), /[,/]/g)
-        text = ""
-        while res = re.exec(textSource)
-          text += smart_escape(textSource.slice(start, res.index))
-          text += res[0]
-          start = res.index + res[0].length
-        text += encodeURIComponent(textSource.slice(start))
-        # console.log("NADAV = #{text}")
-    # console.log("NADAV = #{text}")
-    components.push(resource_type) if resource_type != "image"
-    components.push(type) if type != "upload"
-    components.push(style)
-    components.push(public_id)
-    components.push(text)
-    layer = compact(components).join(":")
-  layer
+      public_id = layer["public_id"]
+      format = layer["format"]
+      resource_type = layer["resource_type"] || "image"
+      type = layer["type"] || "upload"
+      text = layer["text"]
+      style = null
+      components = []
+
+      unless isEmpty(public_id)
+        public_id = public_id.replace(new RegExp("/", 'g'), ":")
+        public_id = "#{public_id}.#{format}" if format?
+
+      if isEmpty(text) && resource_type != "text"
+        if isEmpty(public_id)
+          throw "Must supply public_id for resource_type layer_parameter"
+        if resource_type == "subtitles"
+          style = textStyle(layer)
+
+      else
+        resource_type = "text"
+        type = null
+        # type is ignored for text layers
+        style = textStyle(layer)
+        unless isEmpty(text)
+          unless isEmpty(public_id) ^ isEmpty(style)
+            throw "Must supply either style parameters or a public_id when providing text parameter in a text overlay/underlay"
+          re = /\$\([a-zA-Z]\w*\)/g
+          start = 0
+          textSource = smart_escape(decodeURIComponent(text), /[,/]/g)
+          text = ""
+          while res = re.exec(textSource)
+            text += smart_escape(textSource.slice(start, res.index))
+            text += res[0]
+            start = res.index + res[0].length
+          text += encodeURIComponent(textSource.slice(start))
+      components.push(resource_type) if resource_type != "image"
+      components.push(type) if type != "upload"
+      components.push(style)
+      components.push(public_id)
+      components.push(text)
+      result = compact(components).join(":")
+  else if /^fetch:.+/.test(layer)
+    result = "fetch:#{base64EncodeURL(layer.substr(6))}"
+  else
+    result = layer
+  result
+
+###*
+* Returns the Base64-decoded version of url.<br>
+* @function utils.base64EncodeURL
+* @param {string} url - the url to encode. the value is decoded and then re-encoded before converting to base64 representation
+* @return {string} the base64 representation of the URL
+###
+base64EncodeURL = (url)->
+  try
+    url = decodeURI(url)
+  catch ignore
+
+  url = encodeURI(url)
+  base64Encode(url)
+
+base64Encode = (input)->
+  input = new Buffer.from(String(input), 'binary') unless input instanceof Buffer
+  input.toString('base64')
 
 exports.build_upload_params = (options) ->
   params =
     access_mode: options.access_mode
     allowed_formats: options.allowed_formats && utils.build_array(options.allowed_formats).join(",")
+    async: utils.as_safe_bool(options.async)
     backup: utils.as_safe_bool(options.backup)
     callback: options.callback
     colors: utils.as_safe_bool(options.colors)
@@ -966,27 +989,7 @@ build_custom_headers = (headers)->
   ).join("\n")
 
 exports.build_explicit_api_params = (public_id, options = {})->
-  opt = [
-    callback: options.callback
-    colors: utils.as_safe_bool(options.colors)
-    custom_coordinates: options.custom_coordinates && utils.encode_double_array(options.custom_coordinates)
-    eager: utils.build_eager(options.eager)
-    eager_async: utils.as_safe_bool(options.eager_async)
-    eager_notification_url: options.eager_notification_url
-    face_coordinates: options.face_coordinates && utils.encode_double_array(options.face_coordinates)
-    faces: utils.as_safe_bool(options.faces)
-    headers: build_custom_headers(options.headers)
-    image_metadata: utils.as_safe_bool(options.image_metadata)
-    invalidate: utils.as_safe_bool(options.invalidate)
-    moderation: options.moderation
-    phash: utils.as_safe_bool(options.phash)
-    public_id: public_id
-    responsive_breakpoints: utils.generate_responsive_breakpoints_string(options.responsive_breakpoints)
-    tags: options.tags && utils.build_array(options.tags).join(",")
-    timestamp: (options.timestamp || exports.timestamp())
-    type: options.type
-  ]
-  opt
+  [exports.build_upload_params(extend({}, {public_id}, options))]
 
 exports.generate_responsive_breakpoints_string = (breakpoints)->
   return unless breakpoints?
