@@ -39,7 +39,10 @@
         <div class="photo">
           <h2><%= photo.title %></h2>
           <a href="<%= cloudinary.url(photo.image.public_id)%>" target="_blank">
-            <%-cloudinary.image(photo.image.public_id, {width: 150, height: 150, quality: 80,format:'jpg',class:'thumbnail inline'})%>
+            <%-cloudinary.image(photo.image.public_id, {crop : "thumb", width: 150, height: 150, quality: 80,format:'jpg',class:'thumbnail inline'})%>
+            <%-cloudinary.image(photo.image.public_id, {transformation: [{crop : "thumb", width: 150, height: 150, quality: 80,format:'jpg',class:'thumbnail inline'},
+              {overlay: 'rcco6fsq4oal5f9weekd', gravity: "south_east", opacity: 50, width: 50}]})%>
+            <%-cloudinary.image(photo.image.public_id, {crop : "thumb", width: 150, height: 150, quality: 80,format:'jpg',class:'thumbnail inline', effect: "saturation:50"})%> 
           </a>
 
           <div class="less_info">

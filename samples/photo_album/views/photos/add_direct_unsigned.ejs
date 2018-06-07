@@ -17,7 +17,7 @@
         <div class="upload_button_holder">
           <a href="#" class='upload_button'>Upload</a>
           
-          <%-cloudinary.uploader.unsigned_image_upload_tag('image_id', preset_name,{ callback: cloudinary_cors })%>
+          <%-cloudinary.uploader.unsigned_image_upload_tag('image_id', preset_name,{ callback: cloudinary_cors, width: 500, height: 500, crop: "limit", tags: "lior3"  })%>
         </div>
         <span class="status"></span>
 
@@ -58,11 +58,11 @@
     $(".cloudinary-fileupload").cloudinary_fileupload({
       // Uncomment the following lines to enable client side image resizing and valiation.
       // Make sure cloudinary/processing is included the js file
-      // disableImageResize: false,
-      // imageMaxWidth: 800,
-      // imageMaxHeight: 600,
-      // acceptFileTypes: /(\.|\/)(gif|jpe?g|png|bmp|ico)$/i,
-      // maxFileSize: 20000000, // 20MB
+       disableImageResize: false,
+       imageMaxWidth: 800,
+       imageMaxHeight: 600,
+       acceptFileTypes: /(\.|\/)(gif|jpe?g|png|bmp|ico)$/i,
+       maxFileSize: 20000000, // 20MB
       dropZone: "#direct_upload",
       start: function (e) {
         $(".status").text("Starting upload...");

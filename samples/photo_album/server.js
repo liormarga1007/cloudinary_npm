@@ -2,6 +2,13 @@
 var dotenv = require('dotenv');
 dotenv.load();
 var cloudinary = require('cloudinary').v2;
+process.env.CLOUDINARY_URL = 'cloudinary://939395166143734:lfQyEvpZLuBpER8qR2xLhysl0JA@liormarga'
+cloudinary.config({
+  cloud_name: 'liormarga',
+  api_key: '939395166143734',
+  api_secret: 'lfQyEvpZLuBpER8qR2xLhysl0JA'
+});
+
 if (typeof(process.env.CLOUDINARY_URL)=='undefined'){
   console.warn('!! cloudinary config is undefined !!');
   console.warn('export CLOUDINARY_URL or set dotenv file')
